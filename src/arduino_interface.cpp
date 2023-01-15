@@ -19,7 +19,7 @@ double prev_r = 0;
 auto time = std::chrono::system_clock::now();
 
 
-hardware_interface::return_type ArduinoInterface::configure()
+hardware_interface::return_type ArduinoInterface::configure(const hardware_interface::HardwareInfo & info)
 {
   
 
