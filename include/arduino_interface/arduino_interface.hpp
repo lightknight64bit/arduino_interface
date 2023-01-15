@@ -28,6 +28,7 @@
 #include "rclcpp_lifecycle/state.hpp"
 #include "arduino_serial.hpp"
 
+using hardware_interface::return_type;
 namespace arduino_interface
 {
 class ArduinoInterface: public hardware_interface::SystemInterface
@@ -38,8 +39,7 @@ public:
   
 
   
-  hardware_interface::CallbackReturn on_configure(
-    const rclcpp_lifecycle::State & previous_state) override;
+  return_type configure(const hardware_interface::HardwareInfo & info) override;
 
   
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
@@ -48,12 +48,10 @@ public:
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
 
   
-  hardware_interface::return_type read(
-    const rclcpp::Time & time, const rclcpp::Duration & period) override;
+  return_type read() override;
 
   
-  hardware_interface::return_type write(
-    const rclcpp::Time & time, const rclcpp::Duration & period) override;
+  return_type write() override;
 
 private:
   

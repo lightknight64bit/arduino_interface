@@ -19,8 +19,7 @@ double prev_r = 0;
 auto time = std::chrono::system_clock::now();
 
 
-hardware_interface::CallbackReturn ArduinoInterface::on_configure(
-  const rclcpp_lifecycle::State & )
+hardware_interface::return_type ArduinoInterface::configure()
 {
   
 
@@ -37,7 +36,7 @@ hardware_interface::CallbackReturn ArduinoInterface::on_configure(
 
   RCLCPP_INFO(rclcpp::get_logger("ArduinoInterface"), "Successfully configured!");
 
-  return hardware_interface::CallbackReturn::SUCCESS;
+  return hardware_interface::return_type::OK;
 }
 
 std::vector<hardware_interface::StateInterface>
@@ -64,8 +63,7 @@ ArduinoInterface::export_command_interfaces()
 
 
 
-hardware_interface::return_type ArduinoInterface::read(
-  const rclcpp::Time &, const rclcpp::Duration & )
+hardware_interface::return_type ArduinoInterface::read()
 {
   std::tuple<double, double> vels = serial.read();
   auto new_time = std::chrono::system_clock::now();
@@ -85,8 +83,7 @@ hardware_interface::return_type ArduinoInterface::read(
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type ArduinoInterface::write(
-  const rclcpp::Time & , const rclcpp::Duration & )
+hardware_interface::return_type ArduinoInterface::write()
 {
   
   float rpm_l = hw_cmd_left*60/(2*M_PI);
