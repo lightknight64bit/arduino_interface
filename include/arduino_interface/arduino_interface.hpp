@@ -47,7 +47,8 @@ public:
   
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
 
-  
+  return_type start() override;
+  return_type stop() override;
   return_type read() override;
 
   
