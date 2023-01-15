@@ -25,7 +25,6 @@
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "rclcpp/macros.hpp"
-#include "ros2_control_demo_hardware/visibility_control.h"
 
 
 
