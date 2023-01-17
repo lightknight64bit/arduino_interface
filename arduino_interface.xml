@@ -3,4 +3,7 @@
          type="arduino_interface::ArduinoInterface"
          base_class_type="hardware_interface::SystemInterface">
     <description>
+      The ROS2 Control minimal robot protocol. This is example for start porting the robot from ROS 1.
+    </description>
+  </class>
 </library>
