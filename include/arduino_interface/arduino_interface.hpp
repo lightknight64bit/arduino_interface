@@ -17,8 +17,7 @@
 
 namespace arduino_interface
 {
-class ArduinoInterface
-: public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
+class ArduinoInterface: public hardware_interface::SystemInterface
 {
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(ArduinoInterface);
