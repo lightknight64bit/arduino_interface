@@ -1,6 +1,6 @@
 <library path="arduino_interface">
-  <class name="ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware"
-         type="ros2_control_demo_hardware::RRBotSystemPositionOnlyHardware"
+  <class name="arduino_interface/ArduinoInterface"
+         type="arduino_interface::ArduinoInterface"
          base_class_type="hardware_interface::SystemInterface">
     <description>
 </library>
