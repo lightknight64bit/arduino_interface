@@ -12,15 +12,16 @@
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "rclcpp/macros.hpp"
+#include "arduino_serial.hpp"
 
 
-namespace ros2_control_demo_hardware
+namespace arduino_interface
 {
-class RRBotSystemPositionOnlyHardware
+class ArduinoInterface
 : public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
 {
 public:
-  RCLCPP_SHARED_PTR_DEFINITIONS(RRBotSystemPositionOnlyHardware);
+  RCLCPP_SHARED_PTR_DEFINITIONS(ArduinoInterface);
 
   
   hardware_interface::return_type configure(const hardware_interface::HardwareInfo & info) override;
@@ -44,16 +45,19 @@ public:
   hardware_interface::return_type write() override;
 
 private:
-  // Parameters for the RRBot simulation
-  double hw_start_sec_;
-  double hw_stop_sec_;
-  double hw_slowdown_;
+  
 
-  // Store the command for the simulated robot
-  std::vector<double> hw_commands_;
-  std::vector<double> hw_states_;
+  
+  double hw_vel_left;
+  double hw_pos_left;
+  double hw_cmd_left;
+  double hw_vel_right;
+  double hw_pos_right;
+  double hw_cmd_right;
+
+  ArduinoSerial serial;
 };
 
-}  // namespace ros2_control_demo_hardware
+}  
 
-#endif  // ROS2_CONTROL_DEMO_HARDWARE__RRBOT_SYSTEM_POSITION_ONLY_HPP_
+#endif  

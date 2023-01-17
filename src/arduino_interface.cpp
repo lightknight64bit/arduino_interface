@@ -23,183 +23,82 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-namespace ros2_control_demo_hardware
+namespace arduino_interface
 {
-hardware_interface::return_type RRBotSystemPositionOnlyHardware::configure(
+const std::string left_wheel = "left_wheel_joint";
+const std::string right_wheel = "right_wheel_joint";
+double prev_l = 0;
+double prev_r = 0;
+auto time = std::chrono::system_clock::now();
+hardware_interface::return_type ArduinoInterface::configure(
   const hardware_interface::HardwareInfo & info)
 {
-  if (configure_default(info) != hardware_interface::return_type::OK)
-  {
-    return hardware_interface::return_type::ERROR;
-  }
-
-  hw_start_sec_ = stod(info_.hardware_parameters["example_param_hw_start_duration_sec"]);
-  hw_stop_sec_ = stod(info_.hardware_parameters["example_param_hw_stop_duration_sec"]);
-  hw_slowdown_ = stod(info_.hardware_parameters["example_param_hw_slowdown"]);
-  hw_states_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  hw_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-
-  for (const hardware_interface::ComponentInfo & joint : info_.joints)
-  {
-    // RRBotSystemPositionOnly has exactly one state and command interface on each joint
-    if (joint.command_interfaces.size() != 1)
-    {
-      RCLCPP_FATAL(
-        rclcpp::get_logger("RRBotSystemPositionOnlyHardware"),
-        "Joint '%s' has %d command interfaces found. 1 expected.", joint.name.c_str(),
-        joint.command_interfaces.size());
-      return hardware_interface::return_type::ERROR;
-    }
-
-    if (joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION)
-    {
-      RCLCPP_FATAL(
-        rclcpp::get_logger("RRBotSystemPositionOnlyHardware"),
-        "Joint '%s' have %s command interfaces found. '%s' expected.", joint.name.c_str(),
-        joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
-      return hardware_interface::return_type::ERROR;
-    }
-
-    if (joint.state_interfaces.size() != 1)
-    {
-      RCLCPP_FATAL(
-        rclcpp::get_logger("RRBotSystemPositionOnlyHardware"),
-        "Joint '%s' has %d state interface. 1 expected.", joint.name.c_str(),
-        joint.state_interfaces.size());
-      return hardware_interface::return_type::ERROR;
-    }
-
-    if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
-    {
-      RCLCPP_FATAL(
-        rclcpp::get_logger("RRBotSystemPositionOnlyHardware"),
-        "Joint '%s' have %s state interface. '%s' expected.", joint.name.c_str(),
-        joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
-      return hardware_interface::return_type::ERROR;
-    }
-  }
-
+  
+  serial.init();
+  hw_cmd_left=0;
+  hw_cmd_right=0;
+  hw_vel_left=0;
+  hw_vel_right=0;
+  hw_pos_left=0;
+  hw_pos_right=0;
   status_ = hardware_interface::status::CONFIGURED;
   return hardware_interface::return_type::OK;
 }
 
 std::vector<hardware_interface::StateInterface>
-RRBotSystemPositionOnlyHardware::export_state_interfaces()
+ArduinoInterface::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
-  for (uint i = 0; i < info_.joints.size(); i++)
-  {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      info_.joints[i].name, hardware_interface::HW_IF_POSITION, &hw_states_[i]));
-  }
+  state_interfaces.emplace_back(hardware_interface::StateInterface(left_wheel, hardware_interface::HW_IF_VELOCITY, &hw_vel_left));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(left_wheel, hardware_interface::HW_IF_POSITION, &hw_pos_left));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(right_wheel, hardware_interface::HW_IF_VELOCITY, &hw_vel_right));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(right_wheel, hardware_interface::HW_IF_POSITION, &hw_pos_right));
 
   return state_interfaces;
 }
 
 std::vector<hardware_interface::CommandInterface>
-RRBotSystemPositionOnlyHardware::export_command_interfaces()
+ArduinoInterface::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
-  for (uint i = 0; i < info_.joints.size(); i++)
-  {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[i].name, hardware_interface::HW_IF_POSITION, &hw_commands_[i]));
-  }
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(left_wheel, hardware_interface::HW_IF_VELOCITY, &hw_cmd_left));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(right_wheel, hardware_interface::HW_IF_VELOCITY, &hw_cmd_right));
 
   return command_interfaces;
 }
-
-hardware_interface::return_type RRBotSystemPositionOnlyHardware::start()
+hardware_interface::return_type ArduinoInterface::read()
 {
-  RCLCPP_INFO(rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Starting ...please wait...");
-
-  for (int i = 0; i < hw_start_sec_; i++)
-  {
-    rclcpp::sleep_for(std::chrono::seconds(1));
-    RCLCPP_INFO(
-      rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "%.1f seconds left...",
-      hw_start_sec_ - i);
-  }
-
-  // set some default values when starting the first time
-  for (uint i = 0; i < hw_states_.size(); i++)
-  {
-    if (std::isnan(hw_states_[i]))
-    {
-      hw_states_[i] = 0;
-      hw_commands_[i] = 0;
-    }
-    else
-    {
-      hw_commands_[i] = hw_states_[i];
-    }
-  }
-
-  status_ = hardware_interface::status::STARTED;
-
-  RCLCPP_INFO(
-    rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "System Successfully started!");
-
-  return hardware_interface::return_type::OK;
-}
-
-hardware_interface::return_type RRBotSystemPositionOnlyHardware::stop()
-{
-  RCLCPP_INFO(rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Stopping ...please wait...");
-
-  for (int i = 0; i < hw_stop_sec_; i++)
-  {
-    rclcpp::sleep_for(std::chrono::seconds(1));
-    RCLCPP_INFO(
-      rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "%.1f seconds left...",
-      hw_stop_sec_ - i);
-  }
-
-  status_ = hardware_interface::status::STOPPED;
-
-  RCLCPP_INFO(
-    rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "System successfully stopped!");
-
-  return hardware_interface::return_type::OK;
-}
-
-hardware_interface::return_type RRBotSystemPositionOnlyHardware::read()
-{
-  RCLCPP_INFO(rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Reading...");
-
-  for (uint i = 0; i < hw_states_.size(); i++)
-  {
-    // Simulate RRBot's movement
-    hw_states_[i] = hw_states_[i] + (hw_commands_[i] - hw_states_[i]) / hw_slowdown_;
-    RCLCPP_INFO(
-      rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Got state %.5f for joint %d!",
-      hw_states_[i], i);
-  }
+  std::tuple<double, double> vels = serial.read();
+  auto new_time = std::chrono::system_clock::now();
+  std::chrono::duration<double> diff = new_time - time;
+  double deltas = diff.count();
+  time = new_time;
+  hw_pos_left = std::get<0>(vels);
+  hw_pos_right = std::get<1>(vels);
+  hw_vel_left =(hw_pos_left-prev_l)/deltas;
+  hw_vel_right =(hw_pos_right-prev_r)/deltas;
+  prev_l = hw_pos_left;
+  prev_r = hw_pos_right;
+  RCLCPP_INFO(rclcpp::get_logger("ArduinoInterface"), "%f %f", hw_vel_left, hw_vel_right);
   RCLCPP_INFO(rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Joints successfully read!");
 
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type RRBotSystemPositionOnlyHardware::write()
+hardware_interface::return_type ArduinoInterface::write()
 {
-  RCLCPP_INFO(rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Writing...");
-
-  for (uint i = 0; i < hw_commands_.size(); i++)
-  {
-    // Simulate sending commands to the hardware
-    RCLCPP_INFO(
-      rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Got command %.5f for joint %d!",
-      hw_commands_[i], i);
-  }
-  RCLCPP_INFO(
-    rclcpp::get_logger("RRBotSystemPositionOnlyHardware"), "Joints successfully written!");
+  float rpm_l = hw_cmd_left*60/(2*M_PI);
+  float rpm_r = hw_cmd_right*60/(2*M_PI);
+  std::stringstream ss;
+  ss<<"w"<<rpm_l<<" "<<rpm_r<<"\n";
+  serial.write_msg(ss.str());
 
   return hardware_interface::return_type::OK;
 }
 
-}  // namespace ros2_control_demo_hardware
+}  
 
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  ros2_control_demo_hardware::RRBotSystemPositionOnlyHardware, hardware_interface::SystemInterface)
+  arduino_interface::ArduinoInterface, hardware_interface::SystemInterface)
