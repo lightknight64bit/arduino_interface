@@ -95,7 +95,18 @@ hardware_interface::return_type ArduinoInterface::write()
 
   return hardware_interface::return_type::OK;
 }
+hardware_interface::return_type ArduinoInterface::start()
+{
+  hw_cmd_left = hw_vel_left;
+  hw_cmd_right=hw_vel_right;
+  return hardware_interface::return_type::OK;
+}
+hardware_interface::return_type ArduinoInterface::stop()
+{
+  
 
+  return hardware_interface::return_type::OK;
+}
 }  
 
 #include "pluginlib/class_list_macros.hpp"
