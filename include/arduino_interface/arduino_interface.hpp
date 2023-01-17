@@ -31,11 +31,6 @@ public:
   
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
 
-  
-  hardware_interface::return_type start() override;
-
- 
-  hardware_interface::return_type stop() override;
 
   
   hardware_interface::return_type read() override;
