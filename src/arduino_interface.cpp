@@ -29,6 +29,8 @@ const std::string left_wheel = "left_wheel_joint";
 const std::string right_wheel = "right_wheel_joint";
 double prev_l = 0;
 double prev_r = 0;
+double rpm_prev_l = 0;
+double rpm_prev_r = 0;
 auto time = std::chrono::system_clock::now();
 hardware_interface::return_type ArduinoInterface::configure(
   const hardware_interface::HardwareInfo & info)
@@ -89,9 +91,15 @@ hardware_interface::return_type ArduinoInterface::write()
 {
   float rpm_l = hw_cmd_left*60/(2*M_PI);
   float rpm_r = hw_cmd_right*60/(2*M_PI);
+  if(rpm_l == rpm_prev_r && rpm_r == rpm_prev_r){
+    return hardware_interface::return_type::OK;
+  }
   std::stringstream ss;
   ss<<"w"<<rpm_l<<" "<<rpm_r<<"\n";
   serial.write_msg(ss.str());
+  rpm_prev_l = rpm_l;
+  rpm_prev_r = rpm_r;
+  
 
   return hardware_interface::return_type::OK;
 }
