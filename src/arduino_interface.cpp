@@ -91,9 +91,7 @@ hardware_interface::return_type ArduinoInterface::write()
 {
   float rpm_l = hw_cmd_left*60/(2*M_PI);
   float rpm_r = hw_cmd_right*60/(2*M_PI);
-  if(rpm_l == rpm_prev_r && rpm_r == rpm_prev_r){
-    return hardware_interface::return_type::OK;
-  }
+ 
   std::stringstream ss;
   ss<<"w"<<rpm_l<<" "<<rpm_r<<"\n";
   serial.write_msg(ss.str());
